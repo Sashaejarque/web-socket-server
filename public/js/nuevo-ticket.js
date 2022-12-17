@@ -1,32 +1,27 @@
-const lblNewTicket = document.querySelector('#lblNuevoTicket');
-const btnCreate = document.querySelector('button');
+const lblNuevoTicket = document.querySelector('#lblNuevoTicket');
+const btnCrear = document.querySelector('button');
 
 
 const socket = io();
 
 
-
 socket.on('connect', () => {
-    btnCreate.disabled = false;
-
-});
-
-socket.on('last-ticket', ( last ) => {
-    lblNewTicket.innerText = `Ticket ${last}`;
+    btnCrear.disabled = false;
 });
 
 socket.on('disconnect', () => {
-    btnCreate.disabled = true;
+    btnCrear.disabled = true;
 });
 
+socket.on('ultimo-ticket', (ultimo) => {
+    lblNuevoTicket.innerText = 'Ticket ' + ultimo;
+})
 
 
-
-
-btnCreate.addEventListener( 'click', () => {
-    
-    socket.emit( 'attendTicket', null, ( tkt ) => {
-        lblNewTicket.innerText = tkt;
+btnCrear.addEventListener( 'click', () => {
+   
+    socket.emit( 'siguiente-ticket', null, ( ticket ) => {
+        lblNuevoTicket.innerText = ticket;
     });
 
 });

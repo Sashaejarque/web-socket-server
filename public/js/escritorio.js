@@ -1,13 +1,13 @@
-
-
 const lblEscritorio = document.querySelector('h1');
-const handleTicket = document.querySelector('small');
-const btnCreate = document.querySelector('button');
-const divAlert = document.querySelector('.alert');
+const btnAtender    = document.querySelector('button');
+const lblTicket     = document.querySelector('small');
+const divAlerta     = document.querySelector('.alert');
+const lblPendientes = document.querySelector('#lblPendientes');
 
-const searchParams = new URLSearchParams(window.location.search);
 
-if (!searchParams.has('escritorio')) {
+const searchParams = new URLSearchParams( window.location.search );
+
+if ( !searchParams.has('escritorio') ) {
     window.location = 'index.html';
     throw new Error('El escritorio es obligatorio');
 }
@@ -15,38 +15,45 @@ if (!searchParams.has('escritorio')) {
 const escritorio = searchParams.get('escritorio');
 lblEscritorio.innerText = escritorio;
 
-divAlert.style.display = 'none';
+divAlerta.style.display = 'none';
+
 
 const socket = io();
 
 
-
 socket.on('connect', () => {
-    btnCreate.disabled = false;
-
-});
-
-socket.on('last-ticket', ( last ) => {
-    /* lblNewTicket.innerText = `Ticket ${last}`; */
+    btnAtender.disabled = false;
 });
 
 socket.on('disconnect', () => {
-    btnCreate.disabled = true;
+    btnAtender.disabled = true;
 });
 
+socket.on('tickets-pendientes', ( pendientes ) => {
+    if ( pendientes === 0 ) {
+        lblPendientes.style.display = 'none';
+    } else {
+        lblPendientes.style.display = '';
+        lblPendientes.innerText = pendientes;
+    }
+})
 
 
-
-
-btnCreate.addEventListener( 'click', () => {
+btnAtender.addEventListener( 'click', () => {
     
-   socket.emit( 'attendTicket', { escritorio }, ( { ok, ticket, msg }) => {
-       if (!ok) {
-        handleTicket.innerText = 'Nadie';
-        return divAlert.style.display = '';
-       }
-       handleTicket.innerText = `Ticket ${ticket.number}`;
-   });
 
+    socket.emit( 'atender-ticket', { escritorio }, ( { ok, ticket, msg } ) => {
+        
+        if ( !ok ) {
+            lblTicket.innerText = 'Nadie.';
+            return divAlerta.style.display = '';
+        }
+
+        lblTicket.innerText = 'Ticket ' + ticket.numero;
+
+    });
 
 });
+
+
+

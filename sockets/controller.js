@@ -1,40 +1,60 @@
-const Tickets = require("../models/Ticket-control");
+const TicketControl = require('../models/Ticket-control');
 
-const ticketControl = new Tickets();
+const ticketControl = new TicketControl();
 
-const socketController = socket => {
 
-    socket.emit('last-ticket', ticketControl.last);
 
-        socket.on('nextTicket', (payload, callback) => {
-            const next = ticketControl.next();
-            callback(next);
-        });
+const socketController = (socket) => {
 
-    socket.on('attendTicket', ({ escritorio }, callback) => {
-        if(!escritorio){
+    // Cuando un cliente se conecta
+    socket.emit( 'ultimo-ticket', ticketControl.ultimo );
+    socket.emit( 'estado-actual', ticketControl.ultimos4 );
+    socket.emit( 'tickets-pendientes', ticketControl.tickets.length);
+        
+
+    socket.on('siguiente-ticket', ( payload, callback ) => {
+        
+        const siguiente = ticketControl.siguiente();
+        callback( siguiente );
+        socket.broadcast.emit( 'tickets-pendientes', ticketControl.tickets.length);
+
+    });
+
+    socket.on('atender-ticket', ({ escritorio }, callback) => {
+        
+        if ( !escritorio ) {
             return callback({
                 ok: false,
-                msg: 'El escritorio es obligatorio'
+                msg: 'Es escritorio es obligatorio'
             });
         }
 
-        const ticket = ticketControl.handleTicket(escritorio);
+        const ticket = ticketControl.atenderTicket( escritorio );
 
-        if (!ticket) {
-            return callback({
+        
+        socket.broadcast.emit( 'estado-actual', ticketControl.ultimos4 );
+        socket.emit( 'tickets-pendientes', ticketControl.tickets.length);
+        socket.broadcast.emit( 'tickets-pendientes', ticketControl.tickets.length);
+
+        if ( !ticket ) {
+            callback({
                 ok: false,
-                msg: 'Ya no hay tickets'
+                msg: 'Ya no hay tickets pendientes'
             });
         } else {
             callback({
                 ok: true,
                 ticket
-            });
+            })
         }
+
     })
-};
+
+}
+
+
 
 module.exports = {
     socketController
-};
+}
+
